@@ -1,0 +1,81 @@
+; Copyright (c) uib gmbh (www.uib.de)
+; This sourcecode is owned by uib gmbh
+; and published under the Terms of the General Public License.
+; credits: http://www.opsi.org/credits/
+
+; Parameter: $SearchPattern$: Suchbegriff in Registry
+; sucht die 64 und die 32 bit Registry nach einer Installation durch
+; Rückgabewert: $ResultList32$ gefundene 32bit Einträge
+; Rückgabewert: $ResultList64$ gefundene 64bit Einträge
+Sub_search_registry32_uninstall_keys
+Sub_search_registry64_uninstall_keys
+
+Switch count ($ResultList32$)
+	Case "0"
+		comment "No installations of " + $SearchPattern$ + " found in 32-bit registry"
+	EndCase
+	Case "1"
+		comment "Found one installation of " + $SearchPattern$ + " in 32-bit registry, try to deinstall"
+		Set $RegId$ = takeString(0, $ResultList32$)
+		Set $UninstallProgram$ = GetRegistryStringValue32("[" + $RegPathUninstall$ + "\" + $RegId$ + "] UninstallString")
+		; String aus Registry enthält störende Anführungszeichen
+		Set $UninstallProgram$ = takeString (1, splitString ( $UninstallProgram$ , '"')) 
+		Set $InstallDir$ = GetRegistryStringValue32("[" + $RegPathUninstall$ + "\" + $RegId$ + "] InstallLocation")
+		Winbatch_uninstall
+		sub_check_exitcode
+
+		; löscht vielleicht vorhandene Überbleibsel des Programmes
+		if (Fileexists($InstallDir$))
+			Files_uninstall
+		endif
+	EndCase
+	DefaultCase
+		comment "found more than one installation in the 32-bit registry, this is not expected for this script!"
+		isFatalError
+	EndCase
+EndSwitch
+
+Switch count ($ResultList64$)
+	Case "0"
+		comment "No installations of " + $SearchPattern$ + " found in 64-bit registry"
+	EndCase
+	Case "1"
+		comment "Found one installation of " + $SearchPattern$ + " in 64-bit registry, try to deinstall"
+		Set $RegId$ = takeString(0, $ResultList64$)
+		Set $UninstallProgram$ = GetRegistryStringValue64("[" + $RegPathUninstall$ + "\" + $RegId$ + "] UninstallString")
+		; String aus Registry enthält störende Anführungszeichen
+		Set $UninstallProgram$ = takeString (1, splitString ( $UninstallProgram$ , '"')) 
+		Set $InstallDir$ = GetRegistryStringValue64("[" + $RegPathUninstall$ + "\" + $RegId$ + "] InstallLocation")
+		Winbatch_uninstall
+		sub_check_exitcode
+		
+		; löscht vielleicht vorhandene Überbleibsel des Programmes
+		if (Fileexists($InstallDir$))
+			Files_uninstall
+		endif
+	EndCase
+	DefaultCase
+		comment "found more than one installation in the 64-bit registry, this is not expected for this script!"
+		isFatalError	
+	EndCase
+EndSwitch
+
+set $DesktopIcon$ = getProductProperty("desktopicon","no")
+if $DesktopIcon$ = "yes"
+	comment "Delete common desktop icon"
+	Linkfolder_uninstall_desktopicon
+endif
+	
+comment "include custom post install file"
+set $CustomPostDeinstall$ = getProductProperty("custom-post-deinstall","none")
+if not ($CustomPostDeinstall$ = "none")
+	if FileExists("%ScriptPath%\custom\" + $CustomPostDeinstall$)
+		include_insert "%ScriptPath%\custom\" + $CustomPostDeinstall$
+	endif
+endif
+
+[Winbatch_uninstall]
+"$UninstallProgram$" /s
+
+[Files_uninstall]
+delete -sf $InstallDir$

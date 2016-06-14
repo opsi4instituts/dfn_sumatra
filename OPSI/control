@@ -1,0 +1,148 @@
+[Package]
+version: 1
+depends: 
+incremental: False
+
+[Product]
+type: localboot
+id: dfn_sumatra
+name: Sumatra PDF
+description: Alternatives PDF-Anzeigeprogramm; leichtgewichtig und schnell
+advice: 
+version: 3.1.1
+priority: 0
+licenseRequired: False
+productClasses: 
+setupScript: setup64.opsiscript
+uninstallScript: uninstall64.opsiscript
+updateScript: 
+alwaysScript: 
+onceScript: 
+customScript: 
+userLoginScript: 
+
+[ProductProperty]
+type: unicode
+name: desktopicon
+multivalue: False
+editable: False
+description: Icon on Desktop
+values: ["no", "yes"]
+
+[ProductProperty]
+type: unicode
+name: custom-post-install
+multivalue: False
+editable: False
+description: Define filename for include script in custom directory after installation
+values: ["none", "post-install.opsiinc"]
+default: ["none"]
+
+[ProductProperty]
+type: unicode
+name: custom-post-deinstall
+multivalue: False
+editable: False
+description: Define filename for include script in custom directory after deinstallation
+values: ["none", "post-deinstall.opsiinc"]
+default: ["none"]
+
+[Changelog]
+dfn_sumatra (3.1.1-1)
+	* o4i-Logo
+	* Feinarbeiten für Start DFN-Paket
+ -- Thomas Besser (archIT/KIT) <thomas.besser@kit.edu>, 14.06.2016
+
+ dfn_sumatra (3.1.1-1)
+	* Initiales DFN-Paket
+-- Lukas Stapelbroek(archIT/KIT) <lukas.stapelbroek9@kit.edu>, 04.05.2016
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

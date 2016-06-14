@@ -1,0 +1,68 @@
+; Copyright (c) uib gmbh (www.uib.de)
+; This sourcecode is owned by uib
+; and published under the Terms of the General Public License.
+; credits: http://www.opsi.org/credits/
+
+[Actions]
+; common Values for (un)installation
+include_insert "common.opsiinc"
+
+if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
+	LogError "Not enough space on %SystemDrive%, " + $MinimumSpace$ + " on drive %SystemDrive% needed for " + $ProductId$
+	isFatalError
+	; Stop process and set installation status to failed
+else
+	comment "Show product picture"
+	ShowBitmap "%ScriptPath%\o4i.png" $ProductName$
+	
+	if FileExists("%ScriptPath%\delsub64.opsiscript")
+		comment "Start uninstall sub section"
+		Sub "%ScriptPath%\delsub64.opsiscript"
+	endif
+
+	Message "Installing %installingProdName% (%installingProdVersion%) 64 Bit..."
+	comment "Starting the setup program"
+	Winbatch_install
+	sub_check_exitcode
+	
+	comment "Test for installation success"
+	
+	; Parameter: $SearchPattern$: Suchbegriff in Registry
+	Sub_search_registry64_uninstall_keys
+	; Rückgabewert: $ResultList64$ gefundene Einträge
+	
+	if ( count ($ResultList64$) = "0" )
+		logError "Fatal: After Installation " + $ProductName$ + " could not be found in " + $RegPathUninstall$
+		isFatalError
+	else
+		Set $RegId$ = takeString(0, $ResultList64$)
+		comment "Get 'InstallLocation' from registry for path to exe"
+		Set $PathToExe$ = GetRegistryStringValue64("[" + $RegPathUninstall$ + "\" + $RegId$ + "] DisplayIcon")
+		
+		set $DesktopIcon$ = getProductProperty("desktopicon","no")
+		if $DesktopIcon$ = "yes"
+			comment "Create common desktop icon"
+			Linkfolder_install_desktopicon
+		endif
+		
+		comment "include custom post install file"
+		set $CustomPostInstall$ = getProductProperty("custom-post-install","none")
+		if not ($CustomPostInstall$ = "none")
+			if FileExists("%ScriptPath%\custom\" + $CustomPostInstall$)
+				include_insert "%ScriptPath%\custom\" + $CustomPostInstall$	
+			endif
+		endif
+	endif
+endif
+
+[Winbatch_install]
+"%ScriptPath%/$InstFile$" /s
+
+[Linkfolder_install_desktopicon]
+set_basefolder common_desktopdirectory
+set_subfolder ""
+
+set_link
+	name: $ProductName$
+	target: $PathToExe$
+end_link
