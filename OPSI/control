@@ -7,9 +7,9 @@ incremental: False
 type: localboot
 id: dfn_sumatra
 name: Sumatra PDF
-description: Alternatives PDF-Anzeigeprogramm; leichtgewichtig und schnell
+description: Alternativer Betrachter für PDF und weitere Formate (u.a. ePub); leichtgewichtig und schnell
 advice: 
-version: 3.1.1
+version: 3.1.2
 priority: 0
 licenseRequired: False
 productClasses: 
@@ -48,6 +48,10 @@ values: ["none", "post-deinstall.opsiinc"]
 default: ["none"]
 
 [Changelog]
+dfn_sumatra (3.1.2-1)
+	* neue Upstreamversion
+ -- Thomas Besser (archIT/KIT) <thomas.besser@kit.edu>, 15.08.2016
+
 dfn_sumatra (3.1.1-1)
 	* o4i-Logo
 	* Feinarbeiten für Start DFN-Paket
@@ -56,6 +60,7 @@ dfn_sumatra (3.1.1-1)
  dfn_sumatra (3.1.1-1)
 	* Initiales DFN-Paket
 -- Lukas Stapelbroek(archIT/KIT) <lukas.stapelbroek9@kit.edu>, 04.05.2016
+
 
 
 
