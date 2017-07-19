@@ -79,3 +79,8 @@ endif
 
 [Files_uninstall]
 delete -sf $InstallDir$
+
+[LinkFolder_uninstall_desktopicon]
+set_basefolder common_desktopdirectory
+set_subfolder ""
+delete_element $ProductName$
