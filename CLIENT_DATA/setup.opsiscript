@@ -1,0 +1,80 @@
+[Actions]
+; common Values for (un)installation
+include_insert "common.opsiinc"
+
+if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
+	LogError "Not enough space on %SystemDrive%, " + $MinimumSpace$ + " on drive %SystemDrive% needed for " + $ProductId$
+	isFatalError
+	; Stop process and set installation status to failed
+else
+	if FileExists("%ScriptPath%\delsub.opsiscript")
+		comment "Start uninstall sub section"
+		Sub "%ScriptPath%\delsub.opsiscript"
+	endif
+
+	if (($INST_SystemType$ = "x86 System") and ($INST_architecture$ = "system specific")) or ($INST_architecture$ = "32 only")
+		Message "Installing %installingProdName% (%installingProdVersion%) 32 Bit..."
+		Winbatch_install_32
+	endif
+	
+	if ($INST_SystemType$ = "64 Bit System") and (($INST_architecture$ = "system specific") or ($INST_architecture$ = "64 only"))
+		Message "Installing %installingProdName% (%installingProdVersion%) 64 Bit..."
+		comment "Starting the setup program"
+		Winbatch_install_64	
+	endif
+
+	Set $ExitCode$ = getLastExitCode
+	if stringToBool(isMsExitcodeFatal($ExitCode$, "True", $ErrorString$))
+		isFatalError
+	endif
+	
+	; Ergebnis ist StringList (mehrere Einträge möglich);
+	; in einer Zeile werden drei Ergebnisse mit "|" abgetrennt geliefert: Registrykey (mit Pfad) | Bereich Registry (kann direkt getRegistryValue übergeben werden | DisplayName
+	; z.B. HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Test64|64bit|Test Registry Entry64
+	Set $ResultList$ = SearchRegistryUninstallKeys($SearchPattern$)
+	
+	if ( count ($ResultList$) = "0" )
+		logError "Fatal: After Installation " + $ProductName$ + " could not be found in registry"
+		isFatalError
+	else
+		Set $RegId$ = takeString (0,splitString(takeString(0,$ResultList$), '|'))
+		Set $RegBitScope$ = takeString (1,splitString(takeString(0,$ResultList$), '|'))		
+
+		comment "Check version"
+		Set $InstalledVersion$ = GetRegistryValue($RegId$, "DisplayVersion", $RegBitScope$)
+		if not (contains($InstalledVersion$, $ProductVersion$))
+			LogError "Wrong version number found, something went wrong."
+			isFatalError
+		endif
+		
+		Set $PathToExe$ = GetRegistryValue($RegId$, "DisplayIcon", $RegBitScope$)		
+		
+		if $DesktopLink$ = "true"
+			comment "Create common desktop link"
+			Linkfolder_create_desktoplink
+		endif
+		
+		comment "include custom post install file"
+		set $CustomPostInstall$ = getProductProperty("custom-post-install","none")
+		if not ($CustomPostInstall$ = "none")
+			if FileExists("%ScriptPath%\custom\" + $CustomPostInstall$)
+				include_insert "%ScriptPath%\custom\" + $CustomPostInstall$	
+			endif
+		endif
+	endif
+endif
+
+[Winbatch_install_32]
+"%ScriptPath%/$InstFile32$" /s
+
+[Winbatch_install_64]
+"%ScriptPath%/$InstFile64$" /s
+
+[Linkfolder_create_desktoplink]
+set_basefolder common_desktopdirectory
+set_subfolder ""
+
+set_link
+	name: $ProductName$
+	target: $PathToExe$
+end_link

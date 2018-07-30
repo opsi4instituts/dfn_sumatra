@@ -1,0 +1,59 @@
+; Ergebnis ist StringList (mehrere Einträge möglich);
+; in einer Zeile werden drei Ergebnisse mit "|" abgetrennt geliefert: Registrykey (mit Pfad) | Bereich Registry (kann direkt getRegistryValue übergeben werden | DisplayName
+; z.B. HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Test64|64bit|Test Registry Entry64
+Set $ResultList$ = SearchRegistryUninstallKeys($SearchPattern$)
+
+Switch count ($ResultList$)
+	Case "0"
+		comment "No installations of " + $SearchPattern$ + " found in registry"
+	EndCase
+	Case "1"
+		comment "Found one installation of " + $SearchPattern$ + " in registry, try to deinstall"
+		
+		Set $RegId$ = takeString (0,splitString(takeString(0,$ResultList$), '|'))
+		Set $RegBitScope$ = takeString (1,splitString(takeString(0,$ResultList$), '|'))
+		Set $UninstallProgram$ = GetRegistryValue($RegId$, "UninstallString", $RegBitScope$)
+		; String aus Registry enthält störende Anführungszeichen
+		Set $UninstallProgram$ = takeString (1, splitString ( $UninstallProgram$ , '"')) 
+		Set $InstallDir$ = GetRegistryValue($RegId$, "InstallLocation", $RegBitScope$)
+
+		Winbatch_uninstall
+		Set $ExitCode$ = getLastExitCode
+		if stringToBool(isMsExitcodeFatal($ExitCode$, "True", $ErrorString$))
+			isFatalError
+		endif
+
+		; löscht vielleicht vorhandene Überbleibsel des Programmes
+		if (Fileexists($InstallDir$))
+			Files_uninstall
+		endif
+	EndCase
+	DefaultCase
+		comment "found more than one installation in the registry, this is not expected for this script!"
+		isFatalError
+	EndCase
+EndSwitch
+
+if $DesktopLink$ = "true"
+	comment "Delete common desktop link"
+	Linkfolder_delete_desktoplink
+endif
+	
+comment "include custom post install file"
+set $CustomPostDeinstall$ = getProductProperty("custom-post-deinstall","none")
+if not ($CustomPostDeinstall$ = "none")
+	if FileExists("%ScriptPath%\custom\" + $CustomPostDeinstall$)
+		include_insert "%ScriptPath%\custom\" + $CustomPostDeinstall$
+	endif
+endif
+
+[Winbatch_uninstall]
+"$UninstallProgram$" /s
+
+[Files_uninstall]
+delete -sf $InstallDir$
+
+[LinkFolder_delete_desktoplink]
+set_basefolder common_desktopdirectory
+set_subfolder ""
+delete_element $ProductName$

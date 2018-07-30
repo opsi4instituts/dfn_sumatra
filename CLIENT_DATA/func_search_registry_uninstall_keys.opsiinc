@@ -1,0 +1,37 @@
+DefFunc SearchRegistryUninstallKeys(val $SearchTerm$ : string) : stringlist
+	DefStringList $ResultList$
+	DefStringList $KeyList$
+	DefVar $RegPathUninstall$
+	DefVar $KeyPath$
+	DefVar $DisplayName$
+	DefVar $RegBitScope$
+	DefVar $SystemType$
+
+	Set $SystemType$ = GetSystemType
+	Set $RegPathUninstall$ = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+
+	; nur auf 64-Bit-Systemen ausführen
+	if ($SystemType$ = "64 Bit System")
+		; zuerst 64-Bit
+		Set $KeyList$ = getRegistryKeyList64($RegPathUninstall$)
+		Set $RegBitScope$ = "64bit"
+		for %k% in $KeyList$ do Sub_search_in_keys
+	endif
+	; jetzt 32-Bit
+	Set $KeyList$ = getRegistryKeyList32($RegPathUninstall$)
+	Set $RegBitScope$ = "32bit"
+	for %k% in $KeyList$ do Sub_search_in_keys
+
+	Set $result$ = $ResultList$	
+
+	[Sub_search_in_keys]
+	Set $KeyPath$ = $RegPathUninstall$ + "\%k%"
+	if RegVarExists($KeyPath$, "DisplayName", $RegBitScope$)
+		Set $DisplayName$ = getRegistryValue($KeyPath$, "DisplayName", $RegBitScope$)
+		; Check DisplayName auf Suchbegriff, alles lower damit case-insensitive
+		if (contains(lower($DisplayName$), lower($SearchTerm$)))
+			; zusätzlich noch vermerken, in welchem Teil der Registry (32- oder 64bit) der Schlüssel gefunden wurde. Auch DisplayName mitliefern
+			Set $ResultList$ = addtolist($ResultList$, $KeyPath$ + "|" + $RegBitScope$ + "|" + $DisplayName$)
+		endif		
+	endif
+endfunc
