@@ -1,11 +1,7 @@
-; Copyright (c) uib gmbh (www.uib.de)
-; This sourcecode is owned by uib
-; and published under the Terms of the General Public License.
-; credits: http://www.opsi.org/credits/
-requiredWinstVersion >= "4.11.4.3"
+requiredWinstVersion >= "4.12.0.16"
 
-DefVar $RegPathUninstall$
-DefVar $InstFile$
+DefVar $InstFile32$
+DefVar $InstFile64$
 DefVar $LogDir$
 DefVar $ProductId$
 DefVar $MinimumSpace$
@@ -13,48 +9,56 @@ DefVar $InstallDir$
 DefVar $ExitCode$
 DefVar $CustomPostInstall$
 DefVar $CustomPostDeinstall$
-DefVar $DesktopIcon$
+DefVar $DesktopLink$
 DefVar $SearchPattern$
 DefVar $ProductName$
 DefVar $RegId$
+DefVar $RegBitScope$
 DefVar $PathToExe$
 DefVar $UninstallProgram$
 DefVar $INST_SystemType$
+DefVar $INST_architecture$
 DefVar $MSVersion$
-DefVar $ErrorMsg$
+DefVar $ErrorString$
 DefVar $PathToCmd$
 DefVar $ProductVersion$
-DefStringlist $ResultList64$
-DefStringList $ResultList32$
+DefVar $InstalledVersion$
+DefStringlist $ResultList$
 
 Set $LogDir$ = "%opsiLogDir%"
 
 Set $INST_SystemType$ = GetSystemType
+set $INST_architecture$ = GetProductProperty("install_architecture","system specific")
 Set $MSVersion$	 = GetMsVersionInfo
 
+Set $DesktopLink$ = GetProductProperty("desktop-link","False")
 Set $ProductVersion$	= strPart("%installingProdVersion%", "1", calculate(strPos("%installingProdVersion%","-") + "-" + "1" ))
 
 ; ----------------------------------------------------------------
 ; - Please edit the following values                             -
 ; ----------------------------------------------------------------
 Set $ProductId$		= "dfn_sumatra"
-Set $ProductName$       = "Sumatra PDF"
-Set $SearchPattern$ 	= "SumatraPDF"
+Set $ProductName$	= "Sumatra PDF"
+Set $SearchPattern$ = "SumatraPDF"
 Set $MinimumSpace$	= "50 MB"
-Set $RegPathUninstall$	= "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
-Set $InstFile$		= "SumatraPDF-" + $ProductVersion$ + "-64-install.exe"
+Set $InstFile32$	= "SumatraPDF-" + $ProductVersion$ + "-install.exe"
+Set $InstFile64$	= "SumatraPDF-" + $ProductVersion$ + "-64-install.exe"
 ; ----------------------------------------------------------------
 
-setloglevel = 6
-
-include_append "section_sub_check_exitcode.opsiinc"
-include_append "section_sub_search_registry32_uninstall_keys.opsiinc"
-include_append "section_sub_search_registry64_uninstall_keys.opsiinc"
+; exitcode library von UIB (siehe C:\program files(x86)\opsi.org\opsi-client-agent\opsi-winst\lib) mit 'local functions'
+importLib "uib_exitcode.opsiscript"
+; Library registry search uninstall keys (local functions)
+importLib "func_search_registry_uninstall_keys.opsiinc"
 
 if not ($MSVersion$ = "6.1" OR $MSVersion$ = "10.0")
 	Logwarning "Only tested with windows 7 and 10! Please report to the maintainer successful installation on other windows versions."		
 endif
-if not ($INST_SystemType$ = "64 Bit System")
-	LogError "At the moment a 32 bit version is not included in this packet!"
-	isFatalError
+
+comment "Show product picture"
+if (FileExists("%ScriptPath%\..\lib\icons\%installingProdName%.png"))
+       comment "logo at local library/icons found."
+       ShowBitmap "%ScriptPath%\..\lib\icons\%installingProdName%.png" $ProductName$
+else
+       comment "no logo at local library/icons, use from ScriptPath ..."
+       ShowBitmap "%ScriptPath%\o4i.png" $ProductName$
 endif

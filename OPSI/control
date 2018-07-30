@@ -1,7 +1,6 @@
 [Package]
-version: 2
+version: 3
 depends: 
-incremental: False
 
 [Product]
 type: localboot
@@ -13,8 +12,8 @@ version: 3.1.2
 priority: 0
 licenseRequired: False
 productClasses: 
-setupScript: setup64.opsiscript
-uninstallScript: uninstall64.opsiscript
+setupScript: setup.opsiscript
+uninstallScript: uninstall.opsiscript
 updateScript: 
 alwaysScript: 
 onceScript: 
@@ -23,11 +22,18 @@ userLoginScript:
 
 [ProductProperty]
 type: unicode
-name: desktopicon
-multivalue: False
+name: install_architecture
+multivalue: True
 editable: False
-description: Icon on Desktop
-values: ["no", "yes"]
+description: Betriebssystem-Architektur 32/64 Bit
+values: ["32 only", "64 only", "system specific"]
+default: ["system specific"]
+
+[ProductProperty]
+type: bool
+name: desktop-link
+description: Link on Desktop?
+default: False
 
 [ProductProperty]
 type: unicode
@@ -48,6 +54,15 @@ values: ["none", "post-deinstall.opsiinc"]
 default: ["none"]
 
 [Changelog]
+dfn_sumatra (3.1.2-3)
+	* alte uib Copyrights (Überbleibsel von opsi-template) entfernt
+	* neue Registrysuche (https://github.com/opsi4instituts/lib, winst-Version 4.12.0.16 Voraussetzung)
+	* Destkopicon -> Desktoplink (gem. o4i-Richtlinie)
+	* x86-Installer sowie ProduktProperty "install_architecture" hinzugefügt
+	* Verwendung uib_exitcode (local function)
+	* Check Version (Paket <-> Installation)
+ -- Thomas Besser (archIT/KIT) <thomas.besser@kit.edu>, 30.07.2018
+
 dfn_sumatra (3.1.2-2)
 	* Desktop-icon Deinstallierung fixed
  -- Francesco Ritt (archIT/KIT) <francesco.ritt9@kit.edu>, 18.07.2017
