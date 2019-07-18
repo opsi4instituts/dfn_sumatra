@@ -47,7 +47,7 @@ else
 			isFatalError
 		endif
 		
-		Set $PathToExe$ = GetRegistryValue($RegId$, "DisplayIcon", $RegBitScope$)		
+		Set $PathToExe$ = GetRegistryValue($RegId$, "DisplayIcon", $RegBitScope$)	
 		
 		if $DesktopLink$ = "true"
 			comment "Create common desktop link"
